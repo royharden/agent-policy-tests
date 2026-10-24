@@ -1,5 +1,15 @@
 # Deferred validation
 
+## M4 source construction (runtime unverified)
+
+| # | What | Why deferred | Exact command or steps | Outcome |
+|---|---|---|---|---|
+| D-M4-1 | Fixture generation, fake replay, scorer, baselines and sensitivity | Focused test source written, never executed; no install or runtime work in Dirty Mode | After dependency activation: `npx vitest run tests/fixtures.test.ts tests/replay.test.ts tests/score.test.ts`; `npm run typecheck && npm run lint` | pending |
+| D-M4-2 | Browser/runner consumers and current-report digests | M6/M8 consumers not implemented at the M4 construction boundary | Exercise generator → `evaluatePolicy(policy, fixtures)` → UI/runner, remove a fixture or edit conflict owner, re-evaluate, and verify missing minima/conflict Fail is recomputed; current policy/fixture/context/version digests gate export | pending |
+| D-M4-3 | Dialect mutations and witness minima for unusual parameters | M4 defaults to POSIX-only mutations; M5 dialects not active yet. Extreme amounts/globs may have fewer valid witnesses | After M5, call `generateFixtures(output, { dialects: ['posix', 'powershell', 'cmd'] })` and run D-M4-1 plus gold dev evaluation. Exercise Q12 zero/MAX_SAFE_INTEGER and overlapping path exceptions; gaps stay explicit | pending |
+| D-M4-4 | Large fixture byte test and sensitivity performance | Tests include 1,500 multibyte commands and 2,001-row overflow; delete-one sensitivity is bounded but untimed | Run D-M4-1 on the target, then D-17. Confirm overflow returns structured errors, no truncation, and no fake tool receives a deny/ask | pending |
+| D-M4-5 | Source coverage reconstruction from imports | Without original answers the runner can detect missing Q01–Q12 or surviving free-text sources, but cannot infer a free-text line deleted from every policy field. Q01 consumers are inferred from path/root match fields | Review this limitation during M8 import/export integration; test missing dispositions, orphan rules/manual markers and null-rule witnesses. Keep original draft line visibility in M6 | pending |
+
 This project is being built in **Dirty Mode**: source only, static checks only. Nothing below has run. A row leaves
 this list only when its command has actually been executed and its outcome recorded (with the date) in the
 "Outcome" column. Until then, nothing it covers may be described as "tested" or "working".
