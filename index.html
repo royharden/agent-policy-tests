@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Agent NOT-List Builder: turn an agent's NOT list into executable policy tests." />
+    <title>Agent NOT-List Builder</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1b1f24;
+        --muted: #57606a;
+        --border: #d0d7de;
+        --mock-bg: #fff8c5;
+        --mock-fg: #4d2d00;
+        --local-bg: #ddf4ff;
+        --local-fg: #0a3069;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.5;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --fg: #e6edf3;
+          --muted: #8d96a0;
+          --border: #30363d;
+          --mock-bg: #3b2e00;
+          --mock-fg: #f8e3a1;
+          --local-bg: #0c2d4a;
+          --local-fg: #cae8ff;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      .app {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .tagline,
+      .pending,
+      .app-footer {
+        color: var(--muted);
+      }
+      .banner {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin: 12px 0;
+      }
+      .banner-mock {
+        background: var(--mock-bg);
+        color: var(--mock-fg);
+      }
+      .banner-local {
+        background: var(--local-bg);
+        color: var(--local-fg);
+      }
+      .app-footer {
+        border-top: 1px solid var(--border);
+        margin-top: 24px;
+        padding-top: 8px;
+        font-size: 0.875rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
