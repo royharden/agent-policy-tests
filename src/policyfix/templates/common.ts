@@ -61,6 +61,10 @@ export interface ConflictOwnership {
 
 /** Parameters a free-text line may carry after code extraction (RUBRIC §9 keys). */
 export interface FreeTextParams {
+  /** Code-extracted destination semantics. Missing polarity must never be guessed. */
+  readonly polarity?: 'allow-list' | 'block-list';
+  readonly fs_ops?: readonly FsOp[];
+  readonly git_operation?: 'push' | 'delete' | 'protect';
   readonly command?: string;
   readonly branch?: string;
   readonly host?: string;

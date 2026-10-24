@@ -276,6 +276,8 @@ function compileFreeText(id: string, text: string, params: FreeTextParams, conte
   }
   const path = params.path?.trim();
   if (path !== undefined && path.length > 0) {
+    const operations = params.fs_ops ?? (/^never write (?!or )/i.test(text) ? ['write'] as const : /^never delete (?!or )/i.test(text) ? ['delete'] as const : ['delete', 'write'] as const);
+    if (operations.length === 0 || operations.some((op) => op !== 'delete' && op !== 'write')) return null;
     // `path` is a literal target, not a glob or shell expression. Only leading context-home references expand.
     if ([...path].some((ch) => '*?[`\n\r'.includes(ch))) return null;
     const canonical = canonicalisePath(path, context, { expandHome: true });
@@ -289,17 +291,17 @@ function compileFreeText(id: string, text: string, params: FreeTextParams, conte
       template: TEMPLATE,
       effect: 'deny',
       match: [
-        { op: 'in', field: 'fs.op', values: ['delete', 'write'] },
+        { op: 'in', field: 'fs.op', values: [...operations] },
         { op: 'glob', field: 'fs.path', patterns: [pattern, descendants] },
       ],
-      intent: `Never delete or write ${path} (free text: ${text}).`,
+      intent: `Never ${operations.join(' or ')} ${path} (free text: ${text}).`,
     };
     return {
       rule,
       parameters: ['Q01'],
       examples: [
-        prohibited('p1', fsAction('delete', path, true), 'deny', 'Recursive delete of the path.'),
-        prohibited('p2', fsAction('write', path), 'deny', 'Write to the path.'),
+        prohibited('p1', fsAction(operations[0] ?? 'write', path), 'deny', 'Requested operation on the exact path.'),
+        prohibited('p2', fsAction(operations[0] ?? 'write', joinContextPath(context, path, 'policy-test.txt')), 'deny', 'Requested operation beneath the path.'),
         permitted('n1', fsAction('read', path), 'Reading is not restricted by this line.'),
         permitted('n2', fsAction('list', path), 'Listing is not restricted by this line.'),
       ],

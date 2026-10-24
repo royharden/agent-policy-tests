@@ -2,15 +2,16 @@
 // opaque findings, against an explicit evaluation context. Purely lexical; never reads the real filesystem,
 // environment, DNS or repository.
 //
-// Dialect dispatch: posix is implemented here (shell-posix.ts). PowerShell and cmd are registered as "not yet
-// supported" and yield an opaque `ask` with reason "dialect not yet supported"; M5 replaces those two entries with
-// shell-powershell.ts / shell-cmd.ts without touching the guard.
+// Dialect dispatch shares the action accumulator, wrapper/node caps and scanner+glob budget across all three
+// bounded dialects. Unsupported constructs contribute opaque findings without changing guard precedence.
 // Framework-free.
 import type { Action, ShellDialect } from '../action';
 import type { EvaluationContext } from '../context';
 import { addOpaque, deleteMode, emitFsPath, emitGit, emitRecipients, emitSql, emitUrl, pushSub } from './emit';
 import { AnalysisLimitError, createBudget, type StepBudget } from './opaque';
 import { normalisePosixInto } from './shell-posix';
+import { normalisePowerShellInto } from './shell-powershell';
+import { normaliseCmdInto } from './shell-cmd';
 import type { Accumulator, Normalised, SubAction } from './types';
 
 export type { Normalised, SubAction } from './types';
@@ -18,17 +19,11 @@ export type { Normalised, SubAction } from './types';
 /** A dialect normaliser appends the sub-actions of `command` to the accumulator. `depth` = shell-wrapper depth. */
 export type DialectNormaliser = (acc: Accumulator, command: string, depth: number) => void;
 
-function unsupportedDialect(dialect: ShellDialect): DialectNormaliser {
-  return (acc: Accumulator): void => {
-    addOpaque(acc, 'dialect-unsupported', `${dialect}: dialect not yet supported`);
-  };
-}
-
 /** The dispatch point M5 extends. */
 export const DIALECT_NORMALISERS: Readonly<Record<ShellDialect, DialectNormaliser>> = {
   posix: normalisePosixInto,
-  powershell: unsupportedDialect('powershell'),
-  cmd: unsupportedDialect('cmd'),
+  powershell: normalisePowerShellInto,
+  cmd: normaliseCmdInto,
 };
 
 function normaliseInto(acc: Accumulator, action: Action): void {

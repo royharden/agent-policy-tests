@@ -12,6 +12,7 @@ import { type Rule, MESSAGE_CHANNELS } from '../action';
 import type { EvaluationContext } from '../context';
 import { instantiateGlob } from '../glob';
 import { joinContextPath } from '../normalise/path';
+import { hostInList } from '../normalise/url';
 import type { Answers } from '../questionnaire';
 import {
   type AnswerOutcome,
@@ -249,46 +250,59 @@ function compile(answers: Answers, context: EvaluationContext): readonly AnswerO
 }
 
 function compileFreeText(id: string, text: string, params: FreeTextParams, context: EvaluationContext): CompiledRule | null {
+  if (params.polarity !== 'allow-list' && params.polarity !== 'block-list') return null;
+  const allowList = params.polarity === 'allow-list';
   const hosts = cleanList([...(params.hosts ?? []), ...(params.host === undefined ? [] : [params.host])], true);
   if (hosts.length > 0) {
     const host = concreteHost(hosts[0] ?? 'evil.test');
+    const outsiders: string[] = [];
+    for (let n = 0; outsiders.length < 2 && n < hosts.length + 2; n += 1) {
+      const candidate = `policy-witness-${n}.test`;
+      if (!hostInList(candidate, hosts)) outsiders.push(candidate);
+    }
+    const outside = outsiders[0]; const secondOutside = outsiders[1];
+    if (outside === undefined || secondOutside === undefined) return null;
     const rule: Rule = {
       id: `ft-${slug(id)}-host`,
       source_answer: `freetext:${id}`,
       template: TEMPLATE,
       effect: 'deny',
-      match: [{ op: 'glob', field: 'http.host', patterns: hosts }],
-      intent: `Never send HTTP requests to ${hosts.join(', ')} (free text: ${text}).`,
+      match: [{ op: 'host_not_in', field: 'http.host', hosts, ...(allowList ? {} : { negate: true }) }],
+      intent: `${allowList ? 'Only' : 'Never'} send HTTP requests to ${hosts.join(', ')} (free text: ${text}).`,
     };
     return {
       rule,
       parameters: [],
       examples: [
-        prohibited('p1', httpGet(`https://${host}/`), 'deny', 'The blocked host.'),
-        prohibited('p2', sh(`curl -s https://${host.toUpperCase()}/x`), 'deny', 'Case-folded host via curl.', 'case-fold'),
-        permitted('n1', httpGet(`https://other.example.test/?next=${host}`), 'The host only in the query.', 'url-lookalike'),
+        prohibited('p1', httpGet(`https://${allowList ? outside : host}/`), 'deny', 'Destination violates the declared polarity.'),
+        prohibited('p2', httpGet(`https://${allowList ? secondOutside : host.toUpperCase()}/x`), 'deny', 'A second prohibited request.', 'case-fold'),
+        permitted('n1', httpGet(`https://${allowList ? host : outside}/?next=${host}`), 'Destination satisfies the declared polarity.', 'url-lookalike'),
         permitted('n2', fsAction('read', readme(context)), 'An unrelated action.'),
       ],
     };
   }
   const domain = params.domain?.trim().toLowerCase();
   if (domain !== undefined && domain.length > 0) {
+    // An allow-list needs an additional unverifiable-recipient rule. This single-rule API cannot drop it.
+    if (allowList) return null;
+    const concrete = concreteHost(domain);
+    const outside = hostInList('other.example.test', [domain]) ? 'other.policy-witness.test' : 'other.example.test';
     const rule: Rule = {
       id: `ft-${slug(id)}-domain`,
       source_answer: `freetext:${id}`,
       template: TEMPLATE,
       effect: 'deny',
-      match: [{ op: 'glob', field: 'message.domain', patterns: [domain] }],
+      match: [{ op: 'eq', field: 'message.domain_status', value: 'domain' }, { op: 'host_not_in', field: 'message.domain', hosts: [domain], negate: true }],
       intent: `Never message recipients at ${domain} (free text: ${text}).`,
     };
     return {
       rule,
       parameters: [],
       examples: [
-        prohibited('p1', message('email', `ops@${domain}`), 'deny', 'The blocked domain.'),
-        prohibited('p2', message('email', `OPS@${domain.toUpperCase()}`), 'deny', 'Case-folded domain.', 'case-fold'),
-        permitted('n1', message('email', 'ops@other.example.test'), 'Another domain.'),
-        permitted('n2', message('email', `ops@mail-${domain}`), 'A lookalike domain is a different domain.', 'url-lookalike'),
+        prohibited('p1', message('email', `ops@${concrete}`), 'deny', 'The blocked domain.'),
+        prohibited('p2', message('email', `OPS@${concrete.toUpperCase()}`), 'deny', 'Case-folded domain.', 'case-fold'),
+        permitted('n1', message('email', `ops@${outside}`), 'Another domain.'),
+        permitted('n2', message('sms', '+15550100123'), 'No domain: this block-list does not restrict it.'),
       ],
     };
   }

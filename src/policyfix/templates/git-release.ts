@@ -248,7 +248,24 @@ function compile(answers: Answers, _context: EvaluationContext): readonly Answer
 function compileFreeText(id: string, text: string, params: FreeTextParams, _context: EvaluationContext): CompiledRule | null {
   const branch = params.branch?.trim();
   if (branch === undefined || branch.length === 0) return null;
-  return protectedRule(`ft-${slug(id)}-branch`, `freetext:${id}`, [branch], ` (free text: ${text})`);
+  const operation = params.git_operation ?? (/^never push to /i.test(text) ? 'push' : undefined);
+  if (operation === 'protect') return protectedRule(`ft-${slug(id)}-branch`, `freetext:${id}`, [branch], ` (free text: ${text})`);
+  if (operation !== 'push' && operation !== 'delete') return null;
+  const target = instantiateGlob(branch, 'policy-test');
+  const action = operation === 'push' ? gitAction('push', 'origin', `HEAD:${target}`) : gitAction('branch', '-D', target);
+  const second = operation === 'push' ? gitAction('push', 'origin', target) : gitAction('push', '--delete', 'origin', target);
+  return {
+    rule: {
+      id: `ft-${slug(id)}-branch`, source_answer: `freetext:${id}`, template: TEMPLATE, effect: 'deny',
+      match: [{ op: 'eq', field: operation === 'push' ? 'git.subcommand' : 'git.operation', value: operation }, { op: 'glob', field: 'git.branch', patterns: [branch] }],
+      intent: `Never ${operation === 'push' ? 'push to' : 'delete'} ${branch} (free text: ${text}).`,
+    }, parameters: [], examples: [
+      prohibited('p1', action, 'deny', 'Requested branch operation.'),
+      prohibited('p2', second, 'deny', 'Another spelling of the requested operation.'),
+      permitted('n1', gitAction('status'), 'A read-only operation is not restricted, even by an all-branches pattern.'),
+      permitted('n2', operation === 'push' ? gitAction('branch', '-D', target) : gitAction('push', 'origin', target), 'An operation the line did not restrict.'),
+    ],
+  };
 }
 
 export const gitReleaseTemplate: PolicyTemplate = {

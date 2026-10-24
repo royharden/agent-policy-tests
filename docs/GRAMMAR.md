@@ -77,10 +77,71 @@ POSIX stream/device targets `/dev/null`, `/dev/stdout`, `/dev/stderr`, `/dev/std
 
 ## PowerShell and cmd
 
-At this M3 boundary **both dialects are incomplete scope**. Dispatch returns an opaque `ask` for the entire command.
-The M5 implementation must add case-insensitive cmdlets/aliases, PowerShell parameter prefixes and path/output
-parameters, cmd delete switches and literal wrapper unwrapping before this section can describe those as supported.
-Structured non-shell actions with a Windows path context are supported by the lexical path logic below.
+M5 supplies bounded literal scanners for both dialects. Each shares the action's 20,000-step scanner/glob budget,
+128-command node cap and wrapper depth of three. Completed commands emit immediately; a malformed later suffix
+adds an opaque finding without erasing their effects. Unrecognized programs and binding syntax ask. This is a
+lexical subset, not PowerShell or cmd emulation. Structured non-shell Windows actions use the same path logic.
+
+PowerShell supports case-insensitive cmdlets and common aliases: `Remove-Item` (`rm`, `ri`, `del`, `erase`, `rd`,
+`rmdir`), `Get-Content` (`cat`, `gc`, `type`), `Get-ChildItem` (`ls`, `dir`, `gci`), `Set-Content` (`sc`),
+`Add-Content` (`ac`), `Out-File`, `Write-Output` (`echo`, `write`), `Invoke-WebRequest` (`iwr`),
+`Invoke-RestMethod` (`irm`) and literal `git` argv. Only unique parameter prefixes within the documented per-command
+table are accepted; ambiguous `Remove-Item -f` asks. `-Path` and `-LiteralPath` accept literal paths;
+quoted `-Path` wildcards still ask, while `-LiteralPath` suppresses wildcard expansion. Literal `-Recurse`/`-Force`
+produce delete modes. Single/double quotes, doubled single quotes, ordinary backtick escapes, semicolons, newlines,
+pipes and `&&`/`||` chains are scanned. Quoted command names require a literal `&` invocation. `$HOME`/`${HOME}`
+come from context; all other variables and expressions remain opaque. Literal `pwsh|powershell -Command|-c` is
+unwrapped within the depth cap. Native redirects `>`, `>>`, numbered output streams, `*>`, `*>>` and stream
+duplication share fs emission with output cmdlets and their explicit path parameters. HTTP cmdlets inspect literal
+URI, method and InFile/OutFile effects. `Start-Process -Verb RunAs` exposes an elevation marker and an opaque
+payload. `Invoke-Expression`/`iex`, scripts, encoded commands, dynamic `& $var`, scriptblocks/arrays/grouping,
+parameter expressions, filters and WhatIf ask. PowerShell input redirection is unsupported. Literal comma-separated
+path arrays are outside this version's subset and ask; no real wildcard expansion occurs.
+An unquoted `@` inside a token is literal data, including URL userinfo: an allowed actual host with userinfo asks,
+and a disallowed actual host still denies. Token-boundary `@` splatting, arrays and expression forms remain opaque.
+
+cmd supports double-quoted words, caret escapes, newline/`&`/`&&`/`||`/pipe chains, case-insensitive
+`del|erase /s /q /f`, `rd|rmdir /s /q`, literal `type`/`dir`, `echo`, `rem`, `ver` and git argv. Switches are separate
+words, may follow operands, and retain explicit mode semantics (`/s` recursive; `/f` force on `del`/`erase`). `/q`
+only suppresses prompts and is neither recursive nor force; quiet-only in-root deletions remain plain. Literal
+`cmd [/d] [/s] /c` unwraps within the shared cap; complex nested quote
+reconstruction asks. Redirects `<`, `>`, `>>`, numbered streams and `2>&1` use common fs effects; `NUL`/`NUL:`
+are documented null targets. `%VAR%` and delayed `!VAR!` expansions are never read from the environment; command
+position and operand expansion ask. Batch/control commands, batch files, groups, context changes and unknown
+switches ask. These dialects analyze literal effect data only; no fixture action is executed.
+
+## Free-text subset and classifier boundary
+
+`keyword` is the deterministic default. `mock` is an independent fixed demo lookup with manual fallback, excluded
+from accuracy claims. Neither reads gold. Injection-like directives are screened before all providers. The maximum
+line length is 300 characters. Classifiers supply only one of five template labels or `manual`; code extracts all
+values. Raw labels remain available separately from manual routing for label-accuracy evaluation.
+
+Anchored literal phrases include `never run <command>`, `never push to the <branch> branch`,
+`never delete the <branch> branch`, `never write|delete|write or delete <path>`, `never touch <secret glob>`,
+`never call <host>`, `only call <host>`, `never message recipients at <domain>` and
+`never pay more than <amount> <explicit currency>`. Host lists may be comma-separated, with exact hosts or
+`*.suffix` meaning subdomains only. `polarity` is code-extracted as `block-list` or `allow-list`; missing polarity
+stays manual. A push phrase restricts git push destinations, including remote deletion, but permits local branch
+deletion. Path phrases scope their operations explicitly and cover the literal target plus descendants. Payment
+phrases restrict amounts only in the explicitly named currency; no unstated currency policy is added. Decimals are
+converted to safe integer cents by code. Literal command restrictions use token-prefix matching, not exact argv.
+Secret targets and optional `except` tokens share the same bounded literal grammar; `$`/`%` variable references
+and backtick substitution syntax in either token require manual review rather than becoming literal exemptions.
+
+Qualifiers, mixed clauses, ambiguous currencies/amounts, narrow secret-operation phrases and message allow-lists
+requiring an additional unverifiable-recipient rule stay manual. The single-rule free-text compiler never returns
+one sibling while silently dropping another. Remote thresholds are committed as null with `uncalibrated`
+provenance. Remote candidates remain manual until a separate dev-only calibration records a dataset digest and
+threshold; null/missing/invalid confidence also stays manual. No cutoff has been measured in this construction.
+
+Local eval provider adapters have no default network transport. `deps.call(request, metadata)` is a single injected
+call boundary for M8's explicit live gate, shell-env key resolution, timeout, cache, pre-call cost reservation and
+logging. Jev uses pinned `jev-1.13.0`, Choice over six permutable criteria and state `{line}` only. LLM classification
+uses strict label/confidence JSON. B3 is a separate evaluation-only verdict comparator. Exact option order is
+included in cache metadata; B3 run/row/repeat identity prevents three independent trials sharing one cache draw.
+Missing token counts stay null and raw usage is retained. Model availability, usage/cost and all provider calls
+remain unverified; model identifiers live in `eval/config/models.json`.
 
 ## Paths, destinations and other action kinds
 

@@ -256,6 +256,9 @@ function compileFreeText(id: string, text: string, params: FreeTextParams, conte
   if (glob === undefined || glob.length === 0) return null;
   const spec = splitSpec([glob], params.except ?? [], context);
   const rules = secretRules(`ft-${slug(id)}`, `freetext:${id}`, spec, context, ` (free text: ${text})`);
+  if (rules.length !== 1) return null;
+  // Narrow single-operation phrases stay manual until their examples/rule shape are supported together.
+  if (params.fs_ops !== undefined) return null;
   return rules[0] ?? null;
 }
 

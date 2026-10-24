@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "jev": "jev-1.13.0",
+  "llm": "claude-haiku-4-5-20251001",
+  "b3": "claude-haiku-4-5-20251001",
+  "documentation_checked_at": "2026-10-24",
+  "activation_status": "unverified: recheck model availability and pricing before live calls"
+}
