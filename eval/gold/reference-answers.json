@@ -1,0 +1,21 @@
+{
+  "contexts": {
+    "posix": {"project_root": "/workspace/demo", "cwd": "/workspace/demo", "home": "/home/dev", "path_flavor": "posix", "case_insensitive_fs": false, "grammar_version": "1"},
+    "windows": {"project_root": "C:\\workspace\\demo", "cwd": "C:\\workspace\\demo", "home": "C:\\Users\\dev", "path_flavor": "windows", "case_insensitive_fs": true, "grammar_version": "1"}
+  },
+  "default_unmatched": "allow",
+  "answers": {
+    "Q01": {"context": "<one of contexts; the eval substitutes each row's context>"},
+    "Q02": {"block": true},
+    "Q03": {"block": true, "except": ["node_modules", "dist", ".cache"]},
+    "Q04": {"block": true},
+    "Q05": {"secret_globs": [".env", ".env.*", "*.pem", "id_*", "secrets/**"], "exceptions": [".env.example"]},
+    "Q06": {"enabled": true, "hosts": ["api.example.test", "*.cdn.example.test"]},
+    "Q07": {"enabled": true, "domains": ["example.test"]},
+    "Q08": {"block": true},
+    "Q09": {"branches": ["main", "release/*"]},
+    "Q10": {"mode": "deny"},
+    "Q11": {"block": true},
+    "Q12": {"limit_cents": 5000, "currency": "USD"}
+  }
+}

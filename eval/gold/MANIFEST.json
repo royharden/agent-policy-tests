@@ -1,0 +1,130 @@
+{
+  "author": "S21-INT coder-high subagent (builder-authored, not independent)",
+  "authored_at": "2026-10-24T19:58:43.912Z",
+  "frozen_at": "2026-10-24T20:03:57.646Z",
+  "seed": 20261024,
+  "seed_use": "Fixed seed for eval/run.ts ordering and for drawing the 20-row held-out review sample; the rows themselves were hand-written, not generated from it.",
+  "hash": "sha256 over the exact file bytes (UTF-8, LF line endings; eval/gold/.gitattributes disables git EOL conversion). MANIFEST.json is not listed.",
+  "disclosure": "Gold rows, labels and RUBRIC.md were written by the builder before any normaliser/matcher code existed; they are not independent. Roy reviews a 20-row held-out sample before the single published held-out run (PLAN D-5).",
+  "rubric": "RUBRIC.md",
+  "reference_answers": "reference-answers.json (CONTRACTS C3 values, no deliberate change)",
+  "not_in_this_manifest": "B4 regex rules and classifier thresholds do not exist yet; their hashes are recorded in results.jsonl run metadata (PLAN M2 AC6 / M8 AC3).",
+  "files": {
+    ".gitattributes": {
+      "sha256": "35ec3ad929612972623d5fc9e070623a7bf97a67b3c02355e64f828b09d4533e",
+      "bytes": 132
+    },
+    "RUBRIC.md": {
+      "sha256": "3863cccd9f991b5c5c6ce4bf908a01c7ce21bd654ad2972ab9a2619562bf3fbd",
+      "bytes": 18613
+    },
+    "actions.dev.jsonl": {
+      "sha256": "fb5ea56e45321430a56c736f09cb82619217cbc63e378a0e5d7342373646f62f",
+      "bytes": 21981
+    },
+    "actions.heldout.jsonl": {
+      "sha256": "cc6a93f4765bc4df7235b6538c16e32dff830bf50c93687f0cec44ff424ecbdc",
+      "bytes": 36260
+    },
+    "classifier.dev.jsonl": {
+      "sha256": "3f6c861094a10e3235902f729e35984dce7ffa2dd9edcd7f2b23ab43dc566f45",
+      "bytes": 8308
+    },
+    "classifier.heldout.jsonl": {
+      "sha256": "64d23857ca432117007b31141b48eeedda1a7b63ddc61a30865d5f1052b5b5f9",
+      "bytes": 8028
+    },
+    "reference-answers.json": {
+      "sha256": "00568ce1b8d377464469ae3661c3e4f19cb141a35b044a6afd5c87a32901ee51",
+      "bytes": 1096
+    }
+  },
+  "counts": {
+    "actions": {
+      "dev": {
+        "rows": 80,
+        "prohibited": 43,
+        "permitted": 37,
+        "evasion": 15,
+        "opaque": 5,
+        "by_expected": {
+          "deny": 31,
+          "ask": 9,
+          "allow": 37,
+          "invalid": 3
+        },
+        "traps": {
+          "flag-reorder": 3,
+          "path-traversal": 3,
+          "case-fold": 4,
+          "prefix-wrap": 2,
+          "shell-wrapper": 2,
+          "chained": 2,
+          "sql-comment-split": 2,
+          "url-lookalike": 3,
+          "refspec-trick": 2,
+          "amount-boundary": 3,
+          "dialect-swap": 4,
+          "opaque": 5,
+          "near-miss-permitted": 29
+        }
+      },
+      "heldout": {
+        "rows": 120,
+        "prohibited": 62,
+        "permitted": 58,
+        "evasion": 22,
+        "opaque": 11,
+        "by_expected": {
+          "deny": 45,
+          "ask": 11,
+          "allow": 58,
+          "invalid": 6
+        },
+        "traps": {
+          "flag-reorder": 5,
+          "path-traversal": 4,
+          "case-fold": 6,
+          "prefix-wrap": 4,
+          "shell-wrapper": 4,
+          "chained": 6,
+          "sql-comment-split": 3,
+          "url-lookalike": 4,
+          "refspec-trick": 3,
+          "amount-boundary": 5,
+          "dialect-swap": 8,
+          "opaque": 11,
+          "near-miss-permitted": 42
+        }
+      }
+    },
+    "classifier": {
+      "dev": {
+        "rows": 60,
+        "manual": 13,
+        "injection": 5,
+        "by_label": {
+          "destructive-shell-fs": 10,
+          "secrets-paths": 9,
+          "network-egress": 9,
+          "git-release": 10,
+          "data-money": 9,
+          "manual": 13
+        }
+      },
+      "heldout": {
+        "rows": 60,
+        "manual": 13,
+        "injection": 5,
+        "by_label": {
+          "destructive-shell-fs": 10,
+          "secrets-paths": 9,
+          "network-egress": 9,
+          "git-release": 10,
+          "data-money": 9,
+          "manual": 13
+        }
+      }
+    }
+  }
+}

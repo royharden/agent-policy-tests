@@ -1,0 +1,2 @@
+# Gold files are hashed byte-for-byte in MANIFEST.json; never let git rewrite line endings (core.autocrlf=true on Windows).
+* -text
