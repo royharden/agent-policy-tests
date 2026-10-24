@@ -1,5 +1,28 @@
 # Bolt infrastructure handoff: Agent NOT-List Builder (agent-policy-tests)
 
+## Final source-delivery boundary (M8)
+
+All planned source slices now exist, including the review UI, bundle export, runner build source and offline/live eval
+adapters. They remain **source constructed, runtime unverified**. Dependencies/lockfile, type/lint/tests, frontend and
+runner builds, browser downloads and every backend/provider check remain pending. A source file is not a deployment
+receipt. No remote, GitHub import, migration, function deployment, owner review or paid call has occurred.
+
+Export requires the same M6 content-bound approval helpers, recomputes the report and hashes final bytes of seven
+entries. Missing same-origin runner assets fail explicitly; build:runner must run before dev export. The standalone
+Node20 ESM runner ignores saved report outcomes and uses invalid/Fail=1, otherwise strict Gap=2, otherwise 0.
+Current Fail reports may export visibly; manual acknowledgement preserves Gap.
+
+The fixture expected-field deviation is `expected_local` plus `expected_policy`; see docs/EVALUATION.md. The
+additional app_limits table deviation below remains deliberate. Roy's held-out sample approval and provider/model
+activation decisions are pending. Local eval models are pinned in eval/config/models.json; Jev 1.13.0 is intentional,
+Haiku 4.5 is a dated legacy choice, and prices/availability need re-verification before paid use. The M5 local Jev
+adapter follows the 2026-10-24 documentation read; the separately written M7 deployed wire shape and platform behavior
+still require D-M7-1…9. Do not infer M7 readiness from M5 source.
+
+The local JSONL call ledger enforces conservative pre-call reservations up to $2 per run; the deployed function has
+daily count caps and estimated cost only. Unknown usage remains unknown. Never put either provider key in frontend
+configuration. No environment values were read or entered during this construction.
+
 **Status: locally built, never run; provisioning pending.** The migrations, the `classify-line` edge function and the
 browser adapter below exist as source (PLAN M7). They were written in Dirty Mode: only static checks were performed
 (source inspection, a type-strip syntax parse of the `.ts` files). Nothing has been installed, built, type-checked,

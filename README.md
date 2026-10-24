@@ -1,70 +1,89 @@
 # Agent NOT-List Builder
 
-Turn an agent's NOT list ("never delete outside the project", "never push to main", "never send money over $50")
-into an executable, regex-free policy, generate tests for it, replay them through fake tools, and export a bundle
-with a dependency-free CI runner.
+Turn a questionnaire and an agent's NOT lines into structured policy rules, generated tests and an exportable runner.
+Review what is executable, what is blocked and what still needs a human.
 
-## Status — read this first
+**Source constructed; never installed, built, tested or run.** This is a Dirty Mode source delivery. No runtime,
+browser, evaluation, model-call or infrastructure result is claimed. The lockfile is still absent. All pending work
+has exact activation steps in [DEFERRED-VALIDATION.md](docs/DEFERRED-VALIDATION.md); [results/results.md](results/results.md)
+is an unmeasured placeholder. Coding agents wrote this source; source inspection and syntax parsing are the only
+checks performed. Type checking, lint, tests and independent runtime validation remain pending.
 
-**Built in Dirty Mode: never installed, built, tested or run.** This repository contains source only. No
-`npm install` has been run, so there is no lockfile yet; the type checker, linter, test suites, build and eval have
-never executed. Every unverified behaviour is listed with its exact activation command in
-[`docs/DEFERRED-VALIDATION.md`](docs/DEFERRED-VALIDATION.md). This README contains no metrics: none have been
-measured.
+## Later local activation
 
-What exists now (milestone M1, scaffold and core contracts):
-
-- Project configuration (Vite + React + TypeScript, vitest, ESLint flat config with the static bans).
-- `src/policyfix/`: Zod strict schemas for the seven action kinds, the regex-free match AST, rules, manual items,
-  dispositions, policies and fixtures; named caps; pre-parse byte and depth checks; structured errors; canonical
-  JSON + SHA-256 digests; version constants.
-- A nullable Supabase client and an app shell that shows a mock-mode banner when no Supabase config is present.
-- Tests for the schemas/caps, digest vectors and the environment contract (written, not run).
-
-Not built yet: questionnaire, templates, compiler, matcher, normalisers, guard, fixture generator, replay, scoring,
-free-text classifier, approvals, export bundle, runner, eval command, Supabase migrations and edge function.
-
-## What it will do (planned)
-
-1. Answer a 12-question questionnaire (or load sample answers) and add free-text NOT lines.
-2. Compile answers into rules over a structured match language (no regex), with every answer given a disposition.
-3. Normalise shell (posix, PowerShell, cmd), paths, URLs, SQL and git lexically against a synthetic evaluation
-   context; anything it cannot analyse becomes `ask`, never `allow`.
-4. Generate prohibited and permitted fixtures plus mutated evasions, replay them through fake tools, and report
-   Pass / Fail / Gap per NOT item.
-5. Export `policy.json`, `fixtures.json`, `report.json`, `MANUAL-ITEMS.md` and `policy-runner.mjs` for CI.
-
-Replay checks this evaluator only. It is not a security boundary and does not prove that an agent enforces the
-policy.
-
-## Commands (not yet run)
+Node 20+ and npm are intended. After the owner opens the runtime-validation phase, from this repository:
 
 ```sh
-npm ci                # needs a lockfile first: npm install --package-lock-only (D-19)
-npm run dev           # app in mock mode without .env
+npm install --package-lock-only   # D-19: resolve/record exact pinned dependencies; review and commit the lockfile
+npm ci
 npm run typecheck
 npm run lint
 npm test
-npm run build         # build:runner (M8) + tsc -b + vite build
-npm run eval          # M8
+npm run build                    # bundles public/policy-runner.mjs before tsc/Vite
+npm run dev                      # use the machine's assigned local port when starting a server
+npm run eval                     # offline dev evaluation; not held-out, no keys/network
 ```
 
-Node 20 or newer. Copy `.env.example` to `.env` only when connecting a Supabase project; without it the app runs in
-mock mode with local classifiers.
+These commands have not run and may expose source/dependency issues. The mock journey requires no account or key.
+`npm run dev` alone does not generate the runner asset; build it with `npm run build:runner` before downloading a
+bundle from dev mode. Missing/non-success/empty runner responses produce an explicit export error.
 
-## Configuration
+## Intended review journey
 
-Public (browser) variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_CLASSIFIER_MODE`
-(`keyword` default, `mock`; remote modes need Supabase and an explicit opt-in). Note the two different defaults:
-copying `.env.example` sets `VITE_CLASSIFIER_MODE=mock`, while an unset (or unknown) `VITE_CLASSIFIER_MODE` falls
-back to the `keyword` classifier. The "mock mode" banner is separate: it reflects missing Supabase config, not the
-classifier choice. Server secrets are listed in [`BOLT-HANDOFF.md`](BOLT-HANDOFF.md) and never use a public prefix.
+Load sample answers in either synthetic context; inspect the twelve answers; add and classify `never run terraform
+destroy`, `never push to the hotfix branch`, and `never be rude to customers`. Review extracted parameters, compile,
+generate fixtures and replay through fake tools. Inspect Pass/Fail/Gap, local versus policy expectations, fake-effect
+logs, answer/executable coverage, sensitivity and raw baseline comparisons. Approve free-text-derived rules and
+acknowledge manual markers. Manual acknowledgement keeps Gap. Edits stale the report and affected approvals.
 
-## Prior art (ideas only)
+Export writes seven entries: policy.json, fixtures.json, report.json with approvals, MANUAL-ITEMS.md,
+policy-runner.mjs, README.md and bundle-manifest.json. The builder recomputes outcomes and hashes final bytes.
+Current Fail reports may export visibly; readiness does not hide a failing policy. The standalone runner ignores
+saved report outcomes and recomputes policy plus fixtures, with no dependencies/network after its build:
 
-Ideas from frenum (MIT), Microsoft Agent Governance Toolkit (MIT), Codex execpolicy (Apache-2.0) and agentguard
-(Apache-2.0); AgentWard (BUSL) was read only. No code is copied from these or from AGPL/unlicensed projects.
+```sh
+node policy-runner.mjs --strict
+```
 
-## Licence
+Invalid input or Fail exits 1; otherwise strict Gap exits 2; otherwise 0. Policy unmatched ask is a separate setting.
+No fixture action is executed. This evaluator is **not a security boundary**, and replay does not prove agent enforcement.
 
-MIT — see [`LICENSE`](LICENSE).
+## Architecture and data
+
+React/Vite UI → framework-free TypeScript compiler/templates → bounded POSIX/PowerShell/cmd normalization and
+regex-free matching → guard → fixtures, fake replay, scoring → digest-bound review → byte-hashed export.
+The local eval command compares raw substring/prefix baselines, frozen dev-authored B4 regex, the guard and local
+classifiers. B3 and live classifier evidence are **not yet measured**. Mock is a fixed demo stub excluded from accuracy.
+All data is synthetic. Gold was builder-authored and frozen before normalization, rather than independently labelled.
+
+Inputs can be saved in localStorage or imported as Draft JSON. Reports, approvals, classifier replies and remote opt-in
+reset after reload/import. Policies and review state stay client-side. See [GRAMMAR](docs/GRAMMAR.md),
+[QUESTIONNAIRE](docs/QUESTIONNAIRE.md), [TRAPS](docs/TRAPS.md), [EVALUATION](docs/EVALUATION.md) and
+[LIMITATIONS](docs/LIMITATIONS.md).
+
+Two deliberate spec deviations: a singleton `app_limits` table accompanies `model_call_log` for atomic count caps;
+fixture `expected` is represented by `expected_local` and optional `expected_policy` to preserve conflict ownership.
+
+## Configuration and future providers
+
+Without Supabase configuration the app shows mock mode and uses local classifiers. Browser variables are only
+`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_CLASSIFIER_MODE`. Unset classifier mode defaults to keyword;
+copying .env.example explicitly selects mock. Remote mode requires explicit opt-in and anonymous sign-in.
+
+Bolt Database is the selected backend path. Migrations, JWT-protected classify-line, quota RPCs and browser adapter
+exist as source only. Anonymous auth support, RLS/isolation, CORS, quota behavior and provider contracts have no
+execution receipts. [BOLT-HANDOFF.md](BOLT-HANDOFF.md) is the single infrastructure inventory and inspection prompt.
+No cloud resources, GitHub remote, deployment or publication were created.
+
+Only a future authorized `--live` eval reads shell `TYPESAFE_API_KEY`/`ANTHROPIC_API_KEY`; no credential file is read.
+It requires dated model/price verification, dev-calibrated thresholds for live held-out and durable pre-call reservations
+under a per-run $2 estimate cap. Failed/crashed/unknown-usage calls stay charged; provider usage/cost unknowns stay null.
+Jev is pinned to 1.13.0. Dated Haiku 4.5 is legacy; availability/pricing must be reverified. No paid call was made.
+
+Roy's held-out 20-row sample review is still pending. The eval command requires a matching owner receipt and claims
+attempts atomically; a later attempt needs a recorded rerun reason. Nothing in this repo fabricates that receipt.
+
+## Prior art and licence
+
+Ideas only: frenum and Microsoft Agent Governance Toolkit (MIT), Codex execpolicy and agentguard (Apache-2.0).
+AgentWard (BUSL) was read only. No AGPL/unlicensed implementation or benchmark rows were copied. MIT; see LICENSE.
