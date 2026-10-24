@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { createContext, type ReactElement, useContext } from 'react';
 import type { DefaultUnmatched, QuestionId } from '../policyfix/action';
 import type { EvaluationContext } from '../policyfix/context';
 import { type Answers, type ContextKey, QUESTIONS, type QuestionDefinition, type Q10Mode } from '../policyfix/questionnaire';
@@ -15,7 +15,11 @@ export interface QuestionnaireProps {
   readonly onLoadSample: () => void;
   readonly onCompile: () => void;
   readonly sampleError: string | null;
+  readonly rawAnswers: Readonly<Record<string, string>>;
+  readonly onRawChange: (key: string, text: string) => void;
 }
+
+const RawEditorContext = createContext<{ readonly source: QuestionId; readonly values: Readonly<Record<string, string>>; readonly change: (key: string, text: string) => void } | null>(null);
 
 /** Splits a textarea into items: one per line or comma, trimmed, empty items dropped. */
 function parseList(text: string): string[] {
@@ -32,16 +36,20 @@ interface ListFieldProps {
   readonly onCommit: (items: string[]) => void;
 }
 
-/** Uncontrolled list editor committed on blur (the parent remounts it via `key` when answers are replaced). */
+/** Raw text survives parsing on every keystroke; the parent remounts on a wholesale replacement. */
 function ListField({ label, items, onCommit }: ListFieldProps): ReactElement {
+  const editor = useContext(RawEditorContext);
+  const key = `${editor?.source ?? ''}:${label}`;
   return (
     <label className="field">
       <span>{label}</span>
       <textarea
         rows={Math.max(2, items.length)}
-        defaultValue={items.join('\n')}
-        onBlur={(event) => {
-          onCommit(parseList(event.currentTarget.value));
+        defaultValue={editor?.values[key] ?? items.join('\n')}
+        onChange={(event) => {
+          const value = event.currentTarget.value;
+          editor?.change(key, value);
+          onCommit(parseList(value));
         }}
       />
     </label>
@@ -76,14 +84,18 @@ interface TextFieldProps {
 }
 
 function TextField({ label, value, onCommit }: TextFieldProps): ReactElement {
+  const editor = useContext(RawEditorContext);
+  const key = `${editor?.source ?? ''}:${label}`;
   return (
     <label className="field">
       <span>{label}</span>
       <input
         type="text"
-        defaultValue={value}
-        onBlur={(event) => {
-          onCommit(event.currentTarget.value.trim());
+        defaultValue={editor?.values[key] ?? value}
+        onChange={(event) => {
+          const next = event.currentTarget.value;
+          editor?.change(key, next);
+          onCommit(next.trim());
         }}
       />
     </label>
@@ -271,7 +283,9 @@ export function Questionnaire(props: QuestionnaireProps): ReactElement {
               {question.id} · {question.title}
             </legend>
             <p className="prompt">{question.prompt}</p>
-            <QuestionInputs question={question} answers={answers} onChange={onChange} />
+            <RawEditorContext.Provider value={{ source: question.id, values: props.rawAnswers, change: props.onRawChange }}>
+              <QuestionInputs question={question} answers={answers} onChange={onChange} />
+            </RawEditorContext.Provider>
             <p className="help">{question.help}</p>
           </fieldset>
         ))}

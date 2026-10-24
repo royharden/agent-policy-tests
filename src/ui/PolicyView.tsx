@@ -8,6 +8,7 @@ import { type Answers, questionById, summariseAnswer } from '../policyfix/questi
 export interface PolicyViewProps {
   readonly result: Result<CompileOutput>;
   readonly answers: Answers;
+  readonly freeText?: readonly { readonly id: string; readonly text: string }[];
 }
 
 function describeValue(node: MatchNode): string {
@@ -37,9 +38,9 @@ export function describeNode(node: MatchNode): string {
   return `${node.field}${arg} ${node.negate === true ? 'NOT ' : ''}${node.op} ${describeValue(node)}`;
 }
 
-function answerLabel(source: string, answers: Answers): { title: string; summary: string } {
+function answerLabel(source: string, answers: Answers, freeText: PolicyViewProps['freeText']): { title: string; summary: string } {
   if (isQuestionId(source)) return { title: `${source} · ${questionById(source).title}`, summary: summariseAnswer(answers, source) };
-  return { title: source, summary: 'free-text line' };
+  return { title: source, summary: freeText?.find((line) => `freetext:${line.id}` === source)?.text ?? 'free-text line' };
 }
 
 function ActionChecker({ output }: { readonly output: CompileOutput }): ReactElement {
@@ -95,7 +96,7 @@ function ActionChecker({ output }: { readonly output: CompileOutput }): ReactEle
 }
 
 /** Compiled policy: every rule beside its answer and intent, plus every answer's disposition (PLAN M3 AC7). */
-export function PolicyView({ result, answers }: PolicyViewProps): ReactElement {
+export function PolicyView({ result, answers, freeText = [] }: PolicyViewProps): ReactElement {
   if (!result.ok) {
     return (
       <section aria-labelledby="policy-heading" className="policy">
@@ -134,7 +135,7 @@ export function PolicyView({ result, answers }: PolicyViewProps): ReactElement {
         </thead>
         <tbody>
           {output.dispositions.map((entry) => {
-            const label = answerLabel(entry.source_answer, answers);
+            const label = answerLabel(entry.source_answer, answers, freeText);
             const consumers = output.provenance.parameters[entry.source_answer];
             return (
               <tr key={entry.source_answer}>
@@ -167,7 +168,7 @@ export function PolicyView({ result, answers }: PolicyViewProps): ReactElement {
         </thead>
         <tbody>
           {output.rules.map((rule) => {
-            const label = answerLabel(rule.source_answer, answers);
+            const label = answerLabel(rule.source_answer, answers, freeText);
             return (
               <tr key={rule.id}>
                 <th scope="row">
