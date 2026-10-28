@@ -18,3 +18,13 @@ results/live/
 # OS / editor noise
 .DS_Store
 Thumbs.db
+
+# Local credentials and generated archives
+.creds/
+ArchiveManager-creds.txt
+*.pem
+*.key
+*.p12
+*.pfx
+*.zip
+.cache/
