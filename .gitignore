@@ -1,0 +1,30 @@
+# Environment and credentials: never commit real values. Only the placeholder file is tracked.
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules
+dist
+*.tsbuildinfo
+coverage
+
+# Generated runner (built by `npm run build:runner`, copied into dist/ by vite)
+public/policy-runner.mjs
+
+# Live classifier / B3 results stay local until reviewed
+results/live/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+
+# Local credentials and generated archives
+.creds/
+ArchiveManager-creds.txt
+*.pem
+*.key
+*.p12
+*.pfx
+*.zip
+.cache/

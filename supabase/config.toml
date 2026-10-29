@@ -1,0 +1,8 @@
+# Supabase configuration for the Bolt import (Bolt Database target, BOLT-HANDOFF.md).
+# Only the per-function setting below is required by this app. project_id is a local label, not a cloud project.
+project_id = "agent-policy-tests"
+
+# classify-line is a user endpoint: the gateway verifies the JWT (anonymous sign-in session) AND the handler
+# re-verifies the bearer token with auth.getUser(token), so a project anon key sent as Bearer is rejected (401).
+[functions.classify-line]
+verify_jwt = true
